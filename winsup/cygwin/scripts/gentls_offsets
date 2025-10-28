@@ -4,13 +4,8 @@ input_file=$1
 output_file=$2
 tmp_file=/tmp/${output_file}.$$
 
+set -eo pipefail # fail if any command or pipeline fails
 trap "rm -f ${tmp_file}" 0 1 2 15
-
-# Check if gawk is available
-if ! command -v gawk &> /dev/null; then
-    echo "$0: gawk not found." >&2
-    exit 1
-fi
 
 # Preprocess cygtls.h and filter out only the member lines from
 # class _cygtls to generate an input file for the cross compiler
@@ -29,14 +24,13 @@ gawk '
   }
   /^class _cygtls$/ {
     # Ok, bump marker, next we are expecting a "public:" line
-    marker=1;
+    if (marker == 0) marker=1;
   }
   /^public:/ {
     # We are only interested in the lines between the first (marker == 2)
     # and the second (marker == 3) "public:" line in class _cygtls.  These
     # are where the members are defined.
     if (marker > 0) ++marker;
-    if (marker > 2) exit;
   }
   {
     if (marker == 2 && $1 != "public:") {
