@@ -4469,6 +4469,10 @@ hook_conemu_cygwin_connector()
 bool
 fhandler_console::create_invisible_console ()
 {
+#if defined (__aarch64__)
+  // LoadDLLfunc is not supported yet.
+  return false;
+#else
   ALLOC_CONSOLE_OPTIONS options = { ALLOC_CONSOLE_MODE_NO_WINDOW, FALSE, 0 };
   ALLOC_CONSOLE_RESULT res;
 
@@ -4477,6 +4481,7 @@ fhandler_console::create_invisible_console ()
   termios_printf ("%X = AllocConsoleWithOptions (), %u", ret, res);
   invisible_console = (ret == S_OK);
   return invisible_console;
+#endif
 }
 
 /* Ugly workaround to create invisible console required prior to W11 24H2.
